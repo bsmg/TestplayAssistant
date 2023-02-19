@@ -18,3 +18,7 @@ Proper setup also needs to ensure the server identifiers, user identifiers and c
 This is used to identify testplay channels, update slash commands and ignore other bot messages.
 
 Default values are available (they need uncommenting) for BSMG and BSM.
+
+## Discord bot token
+
+The token.txt file should be in the same folder as the bot script, and include only the token used to connect to the bot with Discord.
