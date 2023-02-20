@@ -1,20 +1,18 @@
 #!/usr/bin/env python3.9
 
 import discord
+import os
+import json
 #from discord.ext import commands
 from discord import app_commands
+from dotenv import load_dotenv
+
+load_dotenv()
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-# Test server
-server_id = 1076685386803327006
-# BSMG
-# server_id = 441805394323439646
-# BSM
-# server_id = 484909350087950336
-
-server = discord.Object(id=server_id)
+server_ids = list(json.loads(os.getenv("SERVER_IDS")))
 
 class TestplayAssistant(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -23,18 +21,21 @@ class TestplayAssistant(discord.Client):
 
     
     async def setup_hook(self):
-        # This copies the global commands over to your guild.
-        self.tree.copy_global_to(guild=server)
-        await self.tree.sync(guild=server)
+        # This copies the global commands over to the guilds.
+        for server_id in server_ids:
+            server = discord.Object(id=server_id)
+
+            self.tree.copy_global_to(guild=server)
+            await self.tree.sync(guild=server)
 
 
 
 bot = TestplayAssistant(intents=intents)
 
-testplay_channels = ["testplays", "first-map-testing"]
+testplay_channels = list(json.loads(os.getenv("TESTPLAY_CHANNELS")))
 # CMB and MapperBot
-excluded_users = [455456822107570186, 701875159673471026]
-channel_limit = 1000
+excluded_users = list(json.loads(os.getenv("EXCLUDED_USER_IDS")))
+channel_limit = int(os.getenv("CHANNEL_LIMIT"))
 
 # This command is probably ugly / not handling things properly. I use it mostly to test.
 # Empty default permissions means only administrators can run it. You can also just kill the bot :P
@@ -88,8 +89,7 @@ async def unchecked(interaction):
         print(f'unchecked command on the wrong channel: ' + interaction.channel.name)
 
 
-token_file = open("token.txt","r")
-token = token_file.read()
-token_file.close()
+
+token = os.getenv("DISCORD_TOKEN")
 
 bot.run(token)
