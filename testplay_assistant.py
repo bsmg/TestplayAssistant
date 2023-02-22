@@ -53,6 +53,7 @@ async def on_ready():
 
 @bot.tree.command(description="Retrieve a list of pending testplays")
 async def listpending(interaction):    
+    await interaction.response.defer()
     if interaction.channel.name in testplay_channels:       
         response_message = ""
         
@@ -85,9 +86,9 @@ async def listpending(interaction):
         else:
             response_message = "No pending testplays found, check back later!"
 
-        await interaction.response.send_message(response_message, ephemeral=True)       
+        await interaction.followup.send(response_message, ephemeral=True)       
     else:
-        await interaction.response.send_message("You can only use this command on testplay channels!",ephemeral=True)
+        await interaction.followup.send("You can only use this command on testplay channels!",ephemeral=True)
         print(f'unchecked command on the wrong channel: ' + interaction.channel.name)
 
 
