@@ -3,7 +3,7 @@ A Discord bot to support testplay management for Beat Saber.
 
 ## Commands:
 
-- /unchecked - Produces a list of messages in the channel that do not have reactions.
+- /listpending - Produces a list of messages in the channel that do not have reactions.
 - /shutdown (admins only) - Shut down the bot.
 
 ## Intents and permissions required
