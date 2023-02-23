@@ -52,12 +52,10 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
 
 @bot.tree.command(description="Retrieve a list of pending testplays")
-async def unchecked(interaction):    
+async def listpending(interaction):    
+    await interaction.response.defer(ephemeral=True)
     if interaction.channel.name in testplay_channels:       
         response_message = ""
-
-        # Begin the response to the user:
-        response_message += "**Unchecked testplays**\n\n"
         
         i = 0
         # Fetch the messages in the channel where the command was sent.        
@@ -70,9 +68,9 @@ async def unchecked(interaction):
                 # URL of the original message
                 response_message += message.jump_url + "\n"
                 # Author
-                response_message += "**Posted by:** " + message.author.mention + "\n"
+                response_message += "**Posted by:** " + message.author.mention
                 # Date
-                response_message += "*at:* " + message.created_at.strftime("%d-%m-%Y %H:%M") + "\n"
+                response_message += " *at:* " + message.created_at.strftime("%d-%m-%Y %H:%M") + "\n"
                 # Message content
                 response_message += "\n"
                 response_message += message.content
@@ -81,11 +79,16 @@ async def unchecked(interaction):
                 response_message += "**ATTACHMENT:** " + message.attachments[0].url + "\n"
                 response_message += "--------------\n\n"               
 
-        response_message += "That should be all the unchecked testplays. Have fun testing!"
+        if response_message:
+            # Add Response Header and Footer
+            response_message = "**Pending testplays**\n\n" + response_message
+            response_message += "That should be all of the pending testplays. Have fun testing!"
+        else:
+            response_message = "No pending testplays found, check back later!"
 
-        await interaction.response.send_message(response_message, ephemeral=True)       
+        await interaction.followup.send(response_message, ephemeral=True)       
     else:
-        await interaction.response.send_message("You can only use this command on testplay channels!",ephemeral=True)
+        await interaction.followup.send("You can only use this command on testplay channels!", ephemeral=True)
         print(f'unchecked command on the wrong channel: ' + interaction.channel.name)
 
 
