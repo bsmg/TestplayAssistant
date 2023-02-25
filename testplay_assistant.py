@@ -61,8 +61,11 @@ async def listpending(interaction):
         response_messages = []
         
         i = 0
-        # Fetch the messages in the channel where the command was sent.        
-        async for message in interaction.channel.history(limit=channel_limit, oldest_first=True):
+
+        # Fetch the messages in the channel where the command was sent.   
+        channel_messages = [message async for message in interaction.channel.history(limit=channel_limit)]
+        # Iterate oldest first     
+        for message in reversed(channel_messages):
             # Messages in the channel where the command was executed which do not have any of the "checked" reactions and have at least one attachment.            
             # Note we check the i on each iteration rather than using a break despite it being less efficient because of the async for, which could produce issues if using break.
             if (i < max_testplays) and (not (message.author.id in excluded_users)) and (len(message.attachments) >= 1):
@@ -94,8 +97,8 @@ async def listpending(interaction):
 
                     embed.set_author(name=f"{author} ({author.id})", icon_url=str(author.avatar.url))
                     
-                    embed.add_field(name="User", value=author.mention, inline=True)
                     embed.add_field(name="Links", value=f"[Jump to Post]({message.jump_url}) **|** [Download Attachment]({message.attachments[0].url})", inline=True)             
+                    embed.add_field(name="User", value=author.mention, inline=True)
 
                     # Add embed to the list
                     response_messages.append(embed)
