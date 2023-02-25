@@ -95,7 +95,7 @@ async def listpending(interaction):
                         description=user_description
                     )
 
-                    embed.set_author(name=f"{author} ({author.id})", icon_url=str(author.avatar.url))
+                    embed.set_author(name=f"{author} ({author.id})")
                     
                     embed.add_field(name="Links", value=f"[Jump to Post]({message.jump_url}) **|** [Download Attachment]({message.attachments[0].url})", inline=True)             
                     embed.add_field(name="User", value=author.mention, inline=True)
