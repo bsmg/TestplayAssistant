@@ -59,8 +59,6 @@ async def listpending(interaction):
     await interaction.response.defer(ephemeral=True)
     if interaction.channel.name in testplay_channels:
         response_messages = []
-
-        response_message = ""
         
         i = 0
         # Fetch the messages in the channel where the command was sent.        
@@ -78,56 +76,40 @@ async def listpending(interaction):
                 if not reacted:
                     i += 1
                     
-                    response_header = ""
-                    response_footer = ""
+                    author = message.author
 
-                    # Number of testplay.
-                    response_header += "**" + str(i) + " -**\n"
-                    # URL of the original message
-                    response_header += message.jump_url + "\n"
-                    # Author
-                    response_header += "**Posted by:** " + message.author.mention
-                    # Date
-                    response_header += " *at:* " + message.created_at.strftime("%d-%m-%Y %H:%M") + "\n\n"
-
-                    response_footer += "\n\n"
-                    # Attachment                
-                    response_footer += "**FILE:** " + message.attachments[0].url + "\n"
-                    response_footer += "--------------\n\n"               
-                    
-                    # Message content
-                    # We truncate the content to make sure it doesn't exceed the maximum with the header and footer.
-                    len_header_footer = len(response_header) + len(response_footer)
-                    len_content = max(max_message_length - len_header_footer,0)
-
-                    response_chunk = ""
-                    response_chunk += response_header
-                    if len(message.content) > len_content:
-                        response_chunk += message.content[0:len_content]
+                    # Check / Truncate if message is longer than embed description limit
+                    user_description = ""
+                    if len(message.content) > max_message_length:
+                        user_description += message.content[0:max_message_length]
                     else:
-                        response_chunk += message.content
-                    response_chunk += response_footer
-                    
-                    # Append to current message if it fits, otherwise create new message
-                    if (len(response_message) + len(response_chunk)) > max_message_length:
-                        response_messages.append(response_message)
-                        response_message = ""
-                    
-                    # At this point we should be safe that appending these two is guaranteed to be below the limit.
-                    response_message += response_chunk
+                        user_description += message.content
 
-        # Last one
-        if response_message:
-            response_messages.append(response_message)
+                    embed = discord.Embed(
+                        title=f"Post #{i}",
+                        color = 0x28b808,
+                        timestamp = message.created_at,
+                        description=user_description
+                    )
+
+                    embed.set_author(name=f"{author} ({author.id})", icon_url=str(author.avatar.url))
+                    
+                    embed.add_field(name="User", value=author.mention, inline=True)
+                    embed.add_field(name="Links", value=f"[Jump to Post]({message.jump_url}) **|** [Download Attachment]({message.attachments[0].url})", inline=True)             
+
+                    # Add embed to the list
+                    response_messages.append(embed)
+
+        # Send the embed batch
+        for j in range(len(response_messages)):
+
+            await interaction.followup.send(embed = response_messages[j], ephemeral=True)
+
+
         
         if len(response_messages) >= 1:
-            # Add global response header and footer
+            # Add global response footer
             # For simplicity and also to be easier for the user to tell when the bot has finished producing output, we produce these as individual follow-ups
-            await interaction.followup.send("**Pending testplays**\n\n", ephemeral=True)
-
-            for response_message in response_messages:
-                await interaction.followup.send(response_message, ephemeral=True)
-
             if i < max_testplays:
                 await interaction.followup.send("That should be all of the pending testplays. Have fun testing!", ephemeral=True)
             else:
