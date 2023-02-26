@@ -32,13 +32,12 @@ class TestplayAssistant(discord.Client):
 bot = TestplayAssistant(intents=intents)
 
 testplay_channels = list(json.loads(os.getenv("TESTPLAY_CHANNELS")))
-# CMB and MapperBot
 excluded_users = list(json.loads(os.getenv("EXCLUDED_USER_IDS")))
 channel_limit = int(os.getenv("CHANNEL_LIMIT"))
 max_message_length = int(os.getenv("MAX_MESSAGE_LENGTH"))
 max_testplays = int(os.getenv("MAX_TESTPLAYS"))
 checked_reactions = list(json.loads(os.getenv("CHECKED_REACTIONS")))
-
+max_response_embeds = int(os.getenv("MAX_RESPONSE_EMBEDS"))
 
 # This command is probably ugly / not handling things properly. I use it mostly to test.
 # Empty default permissions means only administrators can run it. You can also just kill the bot :P
@@ -103,12 +102,20 @@ async def listpending(interaction):
                     # Add embed to the list
                     response_messages.append(embed)
 
-        # Send the embed batch
+        # Generate and Send the embed batch
+        embed_batch = []
+        k = 0
         for j in range(len(response_messages)):
+            if k < max_response_embeds:
+                embed_batch.append(response_messages[j])
+                k += 1
+            else:
+                await interaction.followup.send(embeds = embed_batch, ephemeral=True)
+                embed_batch = []
+                k = 1
+                embed_batch.append(response_messages[j])
 
-            await interaction.followup.send(embed = response_messages[j], ephemeral=True)
-
-
+        await interaction.followup.send(embeds = embed_batch, ephemeral=True)
         
         if len(response_messages) >= 1:
             # Add global response footer
