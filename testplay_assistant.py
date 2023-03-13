@@ -101,30 +101,30 @@ async def listpending(interaction):
 
                     # Add embed to the list
                     response_messages.append(embed)
-
-        # Generate and Send the embed batch
-        embed_batch = []
-        k = 0
-        for j in range(len(response_messages)):
-            if k < max_response_embeds:
-                embed_batch.append(response_messages[j])
-                k += 1
-            else:
-                await interaction.followup.send(embeds = embed_batch, ephemeral=True)
-                embed_batch = []
-                k = 1
-                embed_batch.append(response_messages[j])
-
-        await interaction.followup.send(embeds = embed_batch, ephemeral=True)
         
         if len(response_messages) >= 1:
-            # Add global response footer
-            # For simplicity and also to be easier for the user to tell when the bot has finished producing output, we produce these as individual follow-ups
+            # Generate and Send the embed batch
+            embed_batch = []
+            k = 0
+            for j in range(len(response_messages)):
+                if k < max_response_embeds:
+                    embed_batch.append(response_messages[j])
+                    k += 1
+                else:
+                    await interaction.followup.send(embeds = embed_batch, ephemeral=True)
+                    embed_batch = []
+                    k = 1
+                    embed_batch.append(response_messages[j])
+
+            await interaction.followup.send(embeds = embed_batch, ephemeral=True)
+
+            # Add response footer to indicate possible status
             if i < max_testplays:
                 await interaction.followup.send("That should be all of the pending testplays. Have fun testing!", ephemeral=True)
             else:
                 await interaction.followup.send("Those are the " + str(i) + " oldest pending testplays. There might be more.", ephemeral=True)
         else:
+            # No testplays available
             await interaction.followup.send("No pending testplays found, check back later!", ephemeral=True)        
     else:
         await interaction.followup.send("You can only use this command on testplay channels!", ephemeral=True)
