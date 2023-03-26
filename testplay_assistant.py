@@ -56,6 +56,14 @@ async def on_ready():
 @bot.tree.command(description="Retrieve a list of pending testplays")
 async def listpending(interaction):    
     await interaction.response.defer(ephemeral=True)
+    await listpending_withargs(interaction,dm=False)
+
+@bot.tree.command(description="Retrieve a list of pending testplays and send it on DM")
+async def listpendingdm(interaction):    
+    await interaction.response.send_message("The testplay list will be sent to you over Direct Message.",ephemeral=True)
+    await listpending_withargs(interaction,dm=True)
+
+async def listpending_withargs(interaction,dm=False):
     if interaction.channel.name in testplay_channels:
         response_messages = []
         
@@ -111,25 +119,31 @@ async def listpending(interaction):
                     embed_batch.append(response_messages[j])
                     k += 1
                 else:
-                    await interaction.followup.send(embeds = embed_batch, ephemeral=True)
+                    await send_response(interaction, dm=dm, embeds=embed_batch)
                     embed_batch = []
                     k = 1
                     embed_batch.append(response_messages[j])
 
-            await interaction.followup.send(embeds = embed_batch, ephemeral=True)
+            await send_response(interaction, dm=dm, embeds = embed_batch)
+            #await interaction.followup.send(embeds = embed_batch, ephemeral=True)
 
             # Add response footer to indicate possible status
             if i < max_testplays:
-                await interaction.followup.send("That should be all of the pending testplays. Have fun testing!", ephemeral=True)
+                await send_response(interaction, dm=dm, content="That should be all of the pending testplays. Have fun testing!")                
             else:
-                await interaction.followup.send("Those are the " + str(i) + " oldest pending testplays. There might be more.", ephemeral=True)
+                await send_response(interaction, dm=dm, content="Those are the " + str(i) + " oldest pending testplays. There might be more.")                
         else:
             # No testplays available
-            await interaction.followup.send("No pending testplays found, check back later!", ephemeral=True)        
+            await send_response(interaction,dm=dm, content="No pending testplays found, check back later!")            
     else:
-        await interaction.followup.send("You can only use this command on testplay channels!", ephemeral=True)
+        await send_response(interaction,dm=dm, content="You can only use this command on testplay channels!")        
         print(f'listpending command on the wrong channel: ' + interaction.channel.name)
 
+async def send_response(interaction, dm=False, content = None, **kwargs):
+    if dm:
+        await interaction.user.send(content=content,**kwargs)
+    else:
+        await interaction.followup.send(content=content, ephemeral=True, **kwargs)
 
 
 token = os.getenv("DISCORD_TOKEN")
