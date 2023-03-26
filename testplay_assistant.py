@@ -38,6 +38,7 @@ max_message_length = int(os.getenv("MAX_MESSAGE_LENGTH"))
 max_testplays = int(os.getenv("MAX_TESTPLAYS"))
 checked_reactions = list(json.loads(os.getenv("CHECKED_REACTIONS")))
 max_response_embeds = int(os.getenv("MAX_RESPONSE_EMBEDS"))
+previewer_prefix = os.getenv("PREVIEWER_PREFIX")
 
 # This command is probably ugly / not handling things properly. I use it mostly to test.
 # Empty default permissions means only administrators can run it. You can also just kill the bot :P
@@ -102,9 +103,11 @@ async def listpending_withargs(interaction,dm=False):
                         description=user_description
                     )
 
-                    embed.set_author(name=f"{author} ({author.id})")
+                    embed.set_author(name=f"{author} ({author.id})")                    
                     
-                    embed.add_field(name="Links", value=f"[Jump to Post]({message.jump_url}) **|** [Download Attachment]({message.attachments[0].url})", inline=True)             
+                    preview_url = previewer_prefix + message.attachments[0].url
+
+                    embed.add_field(name="Links", value=f"[Jump to Post]({message.jump_url}) **|** [Download Attachment]({message.attachments[0].url}) **|** [Preview]({preview_url})", inline=True)             
                     embed.add_field(name="User", value=author.mention, inline=True)
 
                     # Add embed to the list
@@ -119,29 +122,41 @@ async def listpending_withargs(interaction,dm=False):
                     embed_batch.append(response_messages[j])
                     k += 1
                 else:
-                    await send_response(interaction, dm=dm, embeds=embed_batch)
+                    await send_response(interaction, dm=dm, mention_instead=False, embeds=embed_batch)
                     embed_batch = []
                     k = 1
                     embed_batch.append(response_messages[j])
 
-            await send_response(interaction, dm=dm, embeds = embed_batch)
+            await send_response(interaction, dm=dm, mention_instead=False, embeds = embed_batch)
             #await interaction.followup.send(embeds = embed_batch, ephemeral=True)
 
             # Add response footer to indicate possible status
             if i < max_testplays:
-                await send_response(interaction, dm=dm, content="That should be all of the pending testplays. Have fun testing!")                
+                await send_response(interaction, dm=dm, mention_instead=False, content="That should be all of the pending testplays. Have fun testing!")                
             else:
-                await send_response(interaction, dm=dm, content="Those are the " + str(i) + " oldest pending testplays. There might be more.")                
+                await send_response(interaction, dm=dm, mention_instead=False, content="Those are the " + str(i) + " oldest pending testplays. There might be more.")                
         else:
             # No testplays available
-            await send_response(interaction,dm=dm, content="No pending testplays found, check back later!")            
+            await send_response(interaction,dm=dm, mention_instead=False, content="No pending testplays found, check back later!")            
     else:
-        await send_response(interaction,dm=dm, content="You can only use this command on testplay channels!")        
+        await send_response(interaction,dm=dm, mention_instead=False, content="You can only use this command on testplay channels!")        
         print(f'listpending command on the wrong channel: ' + interaction.channel.name)
 
-async def send_response(interaction, dm=False, content = None, **kwargs):
+# The mention_instead parameter is used in the case of a failed DM message to send the response on the interaction channel with a mention. If it's False and the DM fails, the message is simply not sent.
+async def send_response(interaction, dm=False, mention_instead=False, content = None, **kwargs):
     if dm:
-        await interaction.user.send(content=content,**kwargs)
+        try:
+            await interaction.user.send(content=content,**kwargs)
+        except discord.Forbidden:
+            if mention_instead:
+                if isinstance(content,str):
+                    full_content = interaction.user.mention + " (DM could not be sent)\n\n" + content
+                    await interaction.channel.send(content=full_content, **kwargs)
+                else:
+                    full_content = interaction.user.mention + " (DM could not be sent)\n\n"
+                    await interaction.channel.send(content=full_content, **kwargs)
+            else:
+                print(f'Message to user ' + interaction.user.name + ' could not be sent through direct message.')
     else:
         await interaction.followup.send(content=content, ephemeral=True, **kwargs)
 
