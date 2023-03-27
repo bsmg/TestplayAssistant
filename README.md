@@ -3,7 +3,9 @@ A Discord bot to support testplay management for Beat Saber.
 
 ## Commands:
 
-- /listpending - Produces a list of messages in the channel that do not have reactions.
+- /listpending - Produces a list of testplays with attachments in the channel that do not have reactions.
+- /listpendingdm - Produces a list of testplays with attachments in the channel that do not have reactions.
+- /archivetestplays (admins only) - Checks for older testplays and archives them (marks them and DMs the poster). This is run automatically once per day.
 - /shutdown (admins only) - Shut down the bot.
 
 ## Intents and permissions required
