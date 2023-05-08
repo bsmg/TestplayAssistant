@@ -5,6 +5,7 @@ import os
 import json
 import ast
 import datetime
+from calendar import timegm
 #from discord.ext import commands
 from discord import app_commands
 from discord.ext import tasks
@@ -75,9 +76,9 @@ async def listpending(interaction):
     await interaction.response.defer(ephemeral=True)
     await listpending_withargs(interaction,dm=False)
 
-@bot.tree.command(description="Retrieve a list of pending testplays and send it on DM")
+@bot.tree.command(description="Retrieve a list of pending testplays and send it on DM.")
 async def listpendingdm(interaction):    
-    await interaction.response.send_message("The testplay list will be sent to you over Direct Message.",ephemeral=True)
+    await interaction.response.send_message("The testplay list will be sent to you over Direct Message if your privacy settings allow.",ephemeral=True)
     await listpending_withargs(interaction,dm=True)
 
 async def listpending_withargs(interaction,dm=False):
@@ -173,10 +174,10 @@ async def send_dm(user, mention_channel, mention_instead=False, content = None, 
     except discord.Forbidden:
         if mention_instead:
             if isinstance(content,str):
-                full_content = f'{user.mention} (DM could not be sent)\n\n{content}'
+                full_content = f'{user.mention} {content}'
                 await mention_channel.send(content=full_content, **kwargs)
             else:
-                full_content = f'{user.mention} (DM could not be sent)\n\n'
+                full_content = f'{user.mention} '
                 await mention_channel.send(content=full_content, **kwargs)
         else:
             print(f'Message to user {user.name} could not be sent through direct message.')
@@ -213,9 +214,9 @@ async def archive_old_testplays():
                         print(f"Tried to react to message {message.jump_url} but was forbidden.")
 
                     # DM the user
-                    message_date_str = message.created_at.strftime("%m/%d/%Y %H:%M:%S")
-                    warning_message = f"Your testplay ({message.jump_url}) was posted on {message_date_str}. It is now over {archive_age_days} days old and has not been reacted to.\n\n"
-                    warning_message += f"I have now marked it with {archive_reaction}.\n\n"
+                    message_unix_timestamp = timegm(message.created_at.utctimetuple())
+                    warning_message = f"Your testplay posted on <t:{message_unix_timestamp}:f> ({message.jump_url}) is over {archive_age_days} days old and has not been reacted to.\n\n"
+                    warning_message += f"A {archive_reaction} has been added automatically. "
                     warning_message += f"If you still require a testplay for this map, please re-post your testplay message."
 
                     await send_dm(message.author, rchannel_obj, mention_instead=True, content=warning_message)
